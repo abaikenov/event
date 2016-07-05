@@ -26,8 +26,9 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'name',
-            'model',
             'event',
+            'model',
+            'attribute',
             [
                 'attribute' => 'from',
                 'format' => 'raw',

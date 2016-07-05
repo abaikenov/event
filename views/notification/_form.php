@@ -20,6 +20,7 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'event')->dropDownList($model->getAllEvents()) ?>
     <?= $form->field($model, 'model')->dropDownList($model->getAllModels()) ?>
+    <?= $form->field($model, 'attribute')->textInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'from')->dropDownList(User::listAll()) ?>
     <?= $form->field($model, 'recipients')->widget(RecipientsWidget::className()) ?>
     <?= $form->field($model, 'type_ids')->checkboxList(Type::listAll(), ['separator' => '<br/>']) ?>

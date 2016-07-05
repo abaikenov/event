@@ -5,12 +5,7 @@ namespace app\components;
 use app\models\Notification;
 use yii\db\ActiveRecord;
 use yii\base\Behavior;
-/**
- * Created by PhpStorm.
- * User: a.baikenov
- * Date: 25.05.2016
- * Time: 15:04
- */
+
 class EventBehavior extends Behavior
 {
     // ...

@@ -22,6 +22,7 @@ class m130526_062349_user extends Migration
         $this->batchInsert('{{%user}}', ['username', 'password_hash', 'email', 'status'], [
             ['admin', '$2y$13$cl3Q263yypMYtLKY/H3S5uoUA1llJjOX4KWZHJJ4wiO.TikrEV3OO', 'admin@mail.ru', 10],
             ['user', '$2y$13$UIamz6FSX8fLgSf2V35Hde4DS/h1LVwizPC/eyP4x69s6JZFm7HCO', 'user@mail.ru', 10],
+            ['moderator', '$2y$13$bhs/UjxCTrGCdYbmBxHrFOamph/bATIK.FULvANdiCNUwL95dUl7O', 'moderator@mail.ru', 10],
         ]);
     }
 

@@ -31,6 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'name',
             'event',
             'model',
+            'attribute',
             [
                 'attribute' => 'from',
                 'format' => 'raw',

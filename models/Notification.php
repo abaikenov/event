@@ -20,6 +20,7 @@ use yii\helpers\Url;
  * @property string $name
  * @property string $event
  * @property string $model
+ * @property string $attribute
  * @property integer $from
  * @property integer $to
  * @property string $title
@@ -87,7 +88,7 @@ class Notification extends \yii\db\ActiveRecord
             [['name', 'event', 'model', 'from', 'recipients', 'title', 'text', 'type_ids'], 'required'],
             [['from', 'created_at', 'updated_at'], 'integer'],
             [['text'], 'string'],
-            [['name', 'event', 'model', 'title'], 'string', 'max' => 255],
+            [['name', 'event', 'model', 'title', 'attribute'], 'string', 'max' => 255],
             [['type_ids'], 'each', 'rule' => ['integer']],
             [['recipients'], 'safe'],
         ];
@@ -103,6 +104,7 @@ class Notification extends \yii\db\ActiveRecord
             'name' => Yii::t('app', 'Name'),
             'event' => Yii::t('app', 'Event'),
             'model' => Yii::t('app', 'Model'),
+            'attribute' => Yii::t('app', 'Attribute'),
             'from' => Yii::t('app', 'From'),
             'recipients' => Yii::t('app', 'Recipients'),
             'title' => Yii::t('app', 'Title'),
@@ -265,16 +267,17 @@ class Notification extends \yii\db\ActiveRecord
         $recipients = $this->getRecipientsByNotificationType();
 
         foreach ($this->types as $type) {
-            foreach ($recipients[$type->name] as $recipient) {
-                try {
-                    if ((new ReflectionClass($type->class))->isSubclassOf(NotificationType::class)) {
-                        $class = new $type->class($this->sender, $recipient, $this->getForTemplate($recipient, $this->title), $this->getForTemplate($recipient, $this->text));
-                        $class->doExecute();
+            if ($recipients[$type->name])
+                foreach ($recipients[$type->name] as $recipient) {
+                    try {
+                        if ((new ReflectionClass($type->class))->isSubclassOf(NotificationType::class)) {
+                            $class = new $type->class($this->sender, $recipient, $this->getForTemplate($recipient, $this->title), $this->getForTemplate($recipient, $this->text));
+                            $class->doExecute();
+                        }
+                    } catch (ErrorException $e) {
+                        $e->getTrace();
                     }
-                } catch(ErrorException $e) {
-                    $e->getTrace();
                 }
-            }
         }
     }
 

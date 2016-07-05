@@ -2,7 +2,7 @@
 
 /* @var $this yii\web\View */
 
-$this->title = 'News';
+$this->title = Yii::t('app', 'News');
 ?>
 <div class="site-index">
 

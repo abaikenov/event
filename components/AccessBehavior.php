@@ -1,12 +1,4 @@
 <?php
-/**
- * AccessBehavior for Yii2
- *
- * @author Elle <elleuz@gmail.com>
- * @version 0.1
- * @package AccessBehavior for Yii2
- *
- */
 namespace app\components;
 
 use Yii;

@@ -93,12 +93,29 @@ class m140506_102106_rbac_init extends \yii\db\Migration
 
         $this->batchInsert($authManager->itemTable, ['name', 'type', 'description', 'created_at', 'updated_at'], [
             ['admin', 1, 'Администратор', 1464069878, 1464069878],
-            ['user', 1, 'Пользователь', 1464069897, 1464069897],
+            ['authorized', 1, 'Пользователь', 1464069897, 1464069897],
+            ['moderator', 1, 'Модератор', 1464069897, 1464069897],
+            ['news', 2, 'Управление новостями', 1464069897, 1464069897],
+            ['notification', 2, 'Управление уведомлениями', 1464069897, 1464069897],
+            ['notification-type', 2, 'Управление типами уведомлений', 1464069897, 1464069897],
+            ['site', 2, 'Просмотр новостей', 1464069897, 1464069897],
+            ['user', 2, 'Управление пользователями', 1464069897, 1464069897],
         ]);
 
+        $this->batchInsert($authManager->itemChildTable, ['parent', 'child'], [
+            ['admin', 'news'],
+            ['moderator', 'news'],
+            ['admin', 'notification'],
+            ['admin', 'notification-type'],
+            ['admin', 'site'],
+            ['authorized', 'site'],
+            ['moderator', 'site'],
+            ['admin', 'user'],
+        ]);
         $this->batchInsert($authManager->assignmentTable, ['item_name', 'user_id', 'created_at'], [
             ['admin', 1, 1464070273],
-            ['user', 2, 1464083971],
+            ['authorized', 2, 1464083971],
+            ['moderator', 3, 1464083971],
         ]);
     }
 

@@ -2,7 +2,6 @@
 
 namespace app\controllers;
 
-use app\types\components\EmailNotificationType;
 use Yii;
 use app\models\Type;
 use yii\data\ActiveDataProvider;
