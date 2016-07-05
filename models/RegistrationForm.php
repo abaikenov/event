@@ -4,6 +4,8 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use yii\bootstrap\Html;
+use yii\helpers\Url;
 
 /**
  * RegistrationForm is the model behind the login form.
@@ -47,7 +49,7 @@ class RegistrationForm extends Model
     {
         return [
             'username' => Yii::t('app', 'Username'),
-            'email' => Yii::t('app', 'E-mail'),
+            'email' => Yii::t('app', 'Email'),
             'password' => Yii::t('app', 'Password'),
             'confirmPassword' => Yii::t('app', 'Confirm Password'),
         ];
@@ -66,7 +68,6 @@ class RegistrationForm extends Model
             $user->username = $this->username;
             $user->email = $this->email;
             $user->setPassword($this->password);
-
             $user->generateAuthKey();
 
             if ($user->save() === false) {

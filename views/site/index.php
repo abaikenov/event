@@ -2,13 +2,14 @@
 
 /* @var $this yii\web\View */
 
-$this->title = 'My Notifications';
+$this->title = 'News';
 ?>
 <div class="site-index">
 
-    <h1>Мои уведомления</h1>
+    <h1>Новости</h1>
     <?= \yii\widgets\ListView::widget([
         'dataProvider' => $dataProvider,
-        'itemView' => '_list'
+        'itemView' => '_list',
+        'itemOptions' => ['class' => 'news-item']
     ]) ?>
 </div>

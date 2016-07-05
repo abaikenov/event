@@ -2,7 +2,7 @@
 
 namespace app\components;
 
-use app\models\Trigger;
+use app\models\Notification;
 use yii\db\ActiveRecord;
 use yii\base\Behavior;
 /**
@@ -27,32 +27,32 @@ class EventBehavior extends Behavior
 
     public function beforeInsert($event)
     {
-        foreach(Trigger::findAll(['type' => $event->name, 'model' => get_class($event->sender)]) as $trigger) {
-            $trigger->doActivate($event->sender);
+        foreach(Notification::findAll(['event' => $event->name, 'model' => get_class($event->sender)]) as $notification) {
+            $notification->doExecute($event->sender);
         }
     }
 
     public function beforeUpdate($event)
     {
-        foreach(Trigger::findAll(['type' => $event->name, 'model' => get_class($event->sender)]) as $trigger) {
-            if($trigger->attribute && $event->sender->isAttributeChanged($trigger->attribute)) {
-                $trigger->doActivate($event->sender);
+        foreach(Notification::findAll(['event' => $event->name, 'model' => get_class($event->sender)]) as $notification) {
+            if($notification->attribute && $event->sender->isAttributeChanged($notification->attribute)) {
+                $notification->doExecute($event->sender);
             }
         }
     }
 
     public function afterInsert($event)
     {
-        foreach(Trigger::findAll(['type' => $event->name, 'model' => get_class($event->sender)]) as $trigger) {
-            $trigger->doActivate($event->sender);
+        foreach(Notification::findAll(['event' => $event->name, 'model' => get_class($event->sender)]) as $notification) {
+            $notification->doExecute($event->sender);
         }
     }
 
     public function afterUpdate($event)
     {
-        foreach(Trigger::findAll(['type' => $event->name, 'model' => get_class($event->sender)]) as $trigger) {
-            if($trigger->attribute && $event->sender->isAttributeChanged($trigger->attribute)) {
-                $trigger->doActivate($event->sender);
+        foreach(Notification::findAll(['event' => $event->name, 'model' => get_class($event->sender)]) as $notification) {
+            if($notification->attribute && $event->sender->isAttributeChanged($notification->attribute)) {
+                $notification->doExecute($event->sender);
             }
         }
     }

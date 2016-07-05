@@ -1,0 +1,2 @@
+$this->sendMail($this->from->email, $this->to->email, $this->title, $this->text);
+    

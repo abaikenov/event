@@ -25,7 +25,9 @@
         "yiisoft/yii2-gii": "*",
         "yiisoft/yii2-faker": "*",
         "developeruz/yii2-db-rbac" : "*",
-        "voskobovich/yii2-many-many-behavior": "^3.0"
+        "voskobovich/yii2-many-many-behavior": "^3.0",
+        "asofter/yii2-imperavi-redactor": "*",
+        "creocoder/yii2-flysystem": "0.8.*"
     },
     "config": {
         "process-timeout": 1800

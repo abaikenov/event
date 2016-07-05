@@ -9,12 +9,16 @@ use yii\widgets\DetailView;
 $this->title = $model->title;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="site-view">
+<div class="news-item">
 
     <h1><?= Html::encode($this->title) ?></h1>
-
-    <p class="small">Дата отправки уведомления: <?= $model->date?></p>
-    <p class="small">От: <?= $model->getSender()->one()->username?></p>
+    <div class="col-sm-4 pull-left">
+        <div class="img">
+            <!--  TODO:  доделать вывод изображения из новости   -->
+            <img src="/images/empty.jpg"/>
+        </div>
+        <span class="info"><i class="glyphicon glyphicon-time"></i><?= $model->getDate()?></span>
+        <span class="info"><i class="glyphicon glyphicon-eye-open"></i><?= $model->visit?></span>
+    </div>
     <p><?= $model->text ?></p>
-
 </div>

@@ -3,6 +3,8 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
+use app\widgets\UserPreferencesWidget;
+use yii\bootstrap\Modal;
 use yii\helpers\Html;
 use yii\bootstrap\Nav;
 use yii\bootstrap\NavBar;
@@ -27,38 +29,46 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'Events System',
+        'brandLabel' => Yii::t('app', 'Welcome'). ' ('.(Yii::$app->user->isGuest ? Yii::t('app', 'Guest') : Yii::$app->user->identity->username).')',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-fixed-top',
         ],
     ]);
-    $items = [];
-    $items[] = ['label' => 'Home', 'url' => ['/site/index']];
+    $items = [
+        ['label' => Yii::t('app', 'Home'), 'url' => ['/site/index']],
+        ['label' => Yii::t('app', 'Manage site'), 'visible' => !Yii::$app->user->isGuest && Yii::$app->user->identity->can(['news', 'user'], false), 'items' => [
+            ['label' => Yii::t('app', 'News'), 'url' => ['/news'], 'visible' => Yii::$app->user->can('news')],
+            ['label' => Yii::t('app', 'Users'), 'url' => ['/user'], 'visible' => Yii::$app->user->can('user')],
+            ['label' => Yii::t('app', 'Notification'), 'url' => ['/notification'], 'visible' => Yii::$app->user->can('notification')],
+            ['label' => Yii::t('app', 'Notification Types'), 'url' => ['/notification-type'], 'visible' => Yii::$app->user->can('notification-type')],
+        ]],
+        ['label' => Yii::t('app', 'Manege access'), 'visible' => !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin(), 'items' => [
+            ['label' => Yii::t('app', 'Roles'), 'url' => ['/permit/access/role'], 'visible' => !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin()],
+            ['label' => Yii::t('app', 'Permissions'), 'url' => ['/permit/access/permission'], 'visible' => !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin()]
+        ]]
+    ];
 
-    if(!Yii::$app->user->isGuest && Yii::$app->user->getIdentity()->isAdmin()) {
-        $items[] = ['label' => 'Articles', 'url' => ['/article']];
-        $items[] = ['label' => 'Users', 'url' => ['/user']];
-        $items[] = ['label' => 'Triggers', 'url' => ['/trigger']];
-        $items[] = ['label' => 'Events', 'url' => ['/event']];
-    }
+    $items[] = ['label' => Html::tag('i', '', ['class' => 'glyphicon glyphicon-envelope']) . ' ' . (!Yii::$app->user->isGuest ? Html::tag('span', Yii::$app->user->identity->newNoticeCount, ['class' => 'badge']) : ''), 'url' => ['/notice'], 'visible' => !Yii::$app->user->isGuest];
+    $items[] = ['label' => Html::tag('i', '', ['class' => 'glyphicon glyphicon-cog', 'data-toggle' => 'modal', 'data-target' => '#preference']), 'url' => '#', 'visible' => !Yii::$app->user->isGuest];
 
-    if(Yii::$app->user->isGuest) {
-        $items[] = ['label' => 'Login', 'url' => ['/site/login']];
+    if (Yii::$app->user->isGuest) {
+        $items[] = ['label' => Yii::t('app', 'Login'), 'url' => ['/site/login']];
     } else {
         $items[] = '<li>'
-        . Html::beginForm(['/site/logout'], 'post', ['class' => 'navbar-form'])
-        . Html::submitButton(
-            'Logout (' . Yii::$app->user->identity->username . ')',
-            ['class' => 'btn btn-link']
-        )
-        . Html::endForm()
-        . '</li>';
+            . Html::beginForm(['/site/logout'], 'post', ['class' => 'navbar-form'])
+            . Html::submitButton(
+                Html::tag('i', '', ['class' => 'glyphicon glyphicon-log-out']),
+                ['class' => 'btn btn-link']
+            )
+            . Html::endForm()
+            . '</li>';
     }
 
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav navbar-right'],
         'items' => $items,
+        'encodeLabels' => false
     ]);
     NavBar::end();
     ?>
@@ -70,6 +80,16 @@ AppAsset::register($this);
         <?= $content ?>
     </div>
 </div>
+
+<?php if (!Yii::$app->user->isGuest): ?>
+    <?php Modal::begin([
+        'id' => 'preference',
+        'header' => '<h2>' . Yii::t('app', 'Settings') . '</h2>',
+    ]);
+    echo UserPreferencesWidget::widget();
+    Modal::end();
+    ?>
+<?php endif; ?>
 
 <?php $this->endBody() ?>
 </body>

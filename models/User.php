@@ -12,7 +12,7 @@ use yii\web\IdentityInterface;
 
 class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
 {
-    const STATUS_DELETED = 0;
+    const STATUS_INACTIVE = 0;
     const STATUS_ACTIVE = 10;
 
 
@@ -43,8 +43,8 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
             [['username', 'email'], 'required'],
             [['username', 'email'], 'string', 'max' => 255],
             ['email', 'email'],
-            ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            ['status', 'default', 'value' => self::STATUS_INACTIVE],
+            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
         ];
     }
 
@@ -55,7 +55,9 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     {
         return [
             'signup' => ['username', 'email', 'status'],
-            'status' => ['status'],
+            'create' => ['username', 'email', 'status'],
+            'update' => ['status'],
+            'create_password' => ['password', 'confirm_password'],
         ];
     }
 
@@ -65,9 +67,14 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     public function attributeLabels()
     {
         return [
-            'id' => 'UserID',
-            'username' => 'Username',
-            'password' => 'Password'
+            'id' => 'User ID',
+            'username' => Yii::t('app', 'Username'),
+            'password' => Yii::t('app', 'Password'),
+            'email' => Yii::t('app', 'Email'),
+            'status' => Yii::t('app', 'Status'),
+            'password_hash' => Yii::t('app', 'Password Hash'),
+            'auth_key' => Yii::t('app', 'Auth Key'),
+            'password_reset_token' => Yii::t('app', 'Password Reset Token'),
         ];
     }
 
@@ -88,6 +95,17 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     }
 
     /**
+     * Finds user by authKey
+     *
+     * @param string $authKey
+     * @return static|null
+     */
+    public static function findByAuthKey($authKey)
+    {
+        return static::findOne(['auth_key' => $authKey, 'status' => self::STATUS_INACTIVE]);
+    }
+
+    /**
      * Finds user by username
      *
      * @param string $username
@@ -96,6 +114,19 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     public static function findByUsername($username)
     {
         return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+    }
+
+    public static function findByRoles($roles)
+    {
+        if(!empty($roles)) {
+            $ids = [];
+            foreach ($roles as $role) {
+                $ids = ArrayHelper::merge($ids, Yii::$app->authManager->getUserIdsByRole($role));
+            }
+            return self::find()->where(['id' => $ids])->all();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -126,7 +157,7 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     {
         return [
             self::STATUS_ACTIVE => Yii::t('app', 'Active'),
-            self::STATUS_DELETED => Yii::t('app', 'Deleted'),
+            self::STATUS_INACTIVE => Yii::t('app', 'Inactive'),
         ];
     }
 
@@ -134,8 +165,8 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     {
         if ($this->status == self::STATUS_ACTIVE)
             return Yii::t('app', 'Active');
-        else if ($this->status == self::STATUS_DELETED)
-            return Yii::t('app', 'Deleted');
+        else if ($this->status == self::STATUS_INACTIVE)
+            return Yii::t('app', 'Inactive');
         else
             return false;
     }
@@ -143,8 +174,8 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
-        if($insert){
-            $userRole = Yii::$app->authManager->getRole('user');
+        if ($insert) {
+            $userRole = Yii::$app->authManager->getRole('authorized');
             Yii::$app->authManager->assign($userRole, $this->getId());
         }
     }
@@ -202,9 +233,21 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
         $this->password_reset_token = null;
     }
 
+    public function doActivate()
+    {
+        $this->auth_key = null;
+        $this->status = User::STATUS_ACTIVE;
+        $this->save(false);
+    }
+
     public function getRoles()
     {
         return Yii::$app->authManager->getRolesByUser($this->id);
+    }
+
+    public function getNewNoticeCount()
+    {
+        return Notice::findMyNotice()->count();
     }
 
     public function isUser()
@@ -225,5 +268,74 @@ class User extends ActiveRecord implements IdentityInterface, UserRbacInterface
         }
 
         return ArrayHelper::map($query->all(), $keyField, $valueField);
+    }
+
+    public function getPreference($option)
+    {
+        $preferenceModel = Preferences::findOne(['option' => $option]);
+        if(null != $preferenceModel) {
+            return $preferenceModel->getUserValue($this->getId());
+        } else {
+            if(isset(Yii::$app->params['defaultOptions'][$option]))
+                return Yii::$app->params['defaultOptions'][$option];
+            else
+                return null;
+        }
+    }
+
+    public function getUserPreferences()
+    {
+        return $this->hasMany(UserPreference::className(), ['user_id' => 'id']);
+    }
+
+    public function getPreferences()
+    {
+        return $this->hasOne(Preferences::className(), ['id' => 'user_id'])->via('userPreferences');
+    }
+
+    /**
+     * @param $permission
+     * @param bool $all - true = проверка всех прав, false = хотя бы один
+     * @return bool
+     */
+    public function can($permission, $all = true)
+    {
+        if(is_array($permission)) {
+            if($all) {
+                $bool = true;
+                foreach ($permission as $permit) {
+                    $bool *= Yii::$app->user->can($permit);
+                }
+                return $bool;
+            } else {
+                foreach ($permission as $permit) {
+                    if(Yii::$app->user->can($permit))
+                        return true;
+                }
+                return false;
+            }
+        } else {
+            return Yii::$app->user->can($permission);
+        }
+    }
+
+    public static function listInsertWords()
+    {
+        return [
+            '{username}',
+            '{email}',
+            '{status}',
+            '{auth_key}',
+        ];
+    }
+
+    public function getForTemplate($attr)
+    {
+        switch ($attr) {
+            case 'status':
+                return $this->getStatusName();
+            default:
+                return $this->$attr ?  $this->$attr : $attr;
+        }
     }
 }

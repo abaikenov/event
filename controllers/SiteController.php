@@ -3,11 +3,15 @@
 namespace app\controllers;
 
 use app\components\AccessBehavior;
+use app\models\News;
 use app\models\Notification;
 use app\models\RegistrationForm;
+use app\models\User;
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\data\Pagination;
 use yii\filters\AccessControl;
+use yii\helpers\Url;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -24,9 +28,9 @@ class SiteController extends Controller
                     ['site' =>
                         [
                             [
-                                'actions' => ['index', 'view'],
+                                'actions' => ['index'],
                                 'allow' => true,
-                                'roles' => ['admin', 'user'],
+                                'roles' => ['admin', 'authorized', 'moderator', '?'],
                             ],
                             [
                                 'actions' => ['login', 'signup'],
@@ -64,8 +68,14 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
+        $pagination = new Pagination();
+        if(!Yii::$app->user->isGuest) {
+            $pagination->pageSize = Yii::$app->user->identity->getPreference('page_size');
+        }
+
         $dataProvider = new ActiveDataProvider([
-            'query' => Notification::findMyNotifications(),
+            'query' => News::find()->orderBy('created_at desc'),
+            'pagination' => $pagination
         ]);
 
         return $this->render('index', [
@@ -75,10 +85,10 @@ class SiteController extends Controller
 
     public function actionView($id)
     {
-        $model = Notification::findOne($id);
-        $model->viewed();
+        $model = News::findOne($id);
+        $model->incVisit();
         return $this->render('view', [
-            'model' => Notification::findOne($id),
+            'model' => $model,
         ]);
     }
 
@@ -109,9 +119,7 @@ class SiteController extends Controller
             $user = $model->signup();
 
             if ($user !== null) {
-                if (Yii::$app->getUser()->login($user)) {
-                    return $this->goHome();
-                }
+                Yii::$app->session->setFlash('signup', Yii::t('app', 'Registration completed successfully! Check your email for confirm it.'));
             }
         }
 
